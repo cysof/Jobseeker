@@ -53,7 +53,7 @@ class Job(models.Model):
     location = models.CharField(max_length=100)
     job_type = models.IntegerField(choices=JOB_TYPE_CHOICES)
     experience_level = models.IntegerField(choices=EXPERIENCE_LEVEL_CHOICES)
-    skills = models.ManyToManyField(Skill, through='JobSkill')
+    # skills = models.ManyToManyField(Skill, through='JobSkill')
     salary = models.FloatField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,7 +66,7 @@ class Job(models.Model):
 # JobSkill model
 class JobSkill(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
+    skills = models.ForeignKey(Skill, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.job.title

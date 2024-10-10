@@ -9,12 +9,13 @@ class CompanySerializer(serializers.ModelSerializer):
 
 # Job serializer
 class JobSerializer(serializers.ModelSerializer):
-    job_type = serializers.StringRelatedField()
-    experience_level = serializers.StringRelatedField()
+    #skills = serializers.StringRelatedField(many=True)
+    company = serializers.StringRelatedField()
+    #job_type = serializers.CharField(source='get_job_type_display')
     class Meta:
         model = Job
-        fields = ['id', 'title', 'description', 'company', 'location', 'job_type', 'experience_level', 'salary', 'skills']
-# Skill serializer
+        fields = ['id', 'title', 'description', 'company', 'location', 'job_type', 'experience_level', 'salary', 'is_active']
+
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
@@ -23,7 +24,8 @@ class SkillSerializer(serializers.ModelSerializer):
 
 # JobSkill serializer
 class JobSkillSerializer(serializers.ModelSerializer):
-    skill = serializers.StringRelatedField()
+    skill = serializers.StringRelatedField(read_only = False)
+    job = serializers.StringRelatedField()
     class Meta:
         model = JobSkill
         fields = ['id', 'job', 'skill']
@@ -58,16 +60,19 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 # Application serializer
 class ApplicationSerializer(serializers.ModelSerializer):
+    job = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Application
         fields = ['id', 'job', 'applicant_name', 'applicant_email', 'resume', 'cover_letter']
-        
+    
     def create(self, validated_data):
-        # Get the user who is applying for the job
-        user = self.context['request'].user
-        # Create the application instance
-        return Application.objects.create(**validated_data, user=user)
+        applicant_email = self.context['request'].data.get('applicant_email')
+        
+        if not applicant_email:
+            raise serializers.ValidationError("Applicant email is required.")
 
+        return Application.objects.create(**validated_data)
+    
     def update(self, instance, validated_data):
         """
         Updates an application instance. If the 'cover_letter' or 'resume' keys are

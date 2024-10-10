@@ -33,7 +33,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def get_by_user(self, request):
         user = request.user
-        applications = Application.objects.filter(applicant_email=user.email)  # Ensure this is how you filter
+        applications = Application.objects.filter(applicant_email=user.email) 
         serializer = ApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
