@@ -29,7 +29,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'jobseek',
+    # LOCAL APPs
+    'jobseek.apps.JobseekConfig',
+    'wallet.apps.WalletConfig',
+    
+    # THIRD PARTY APPS
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
