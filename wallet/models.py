@@ -1,6 +1,7 @@
 from django.db import models
 from jobseek .models import CustomUser
 from decimal import Decimal
+import uuid
 
 TRANSCATION_TYPES = (
     ('deposit', 'Deposit'),
@@ -16,25 +17,7 @@ class Wallet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @classmethod
-    def generate_wallet_address(cls, phone_number):
-        """
-        Generates a wallet address from a phone number.
-
-        :param phone_number: The phone number to generate the wallet address from.
-        :type phone_number: str
-        :return: The generated wallet address.
-        :rtype: str
-        """
-        # Remove the first zero if it exists
-        phone_number = phone_number.lstrip('0')
-
-        # Ensure the phone number is 10 digits
-        if len(phone_number) != 10:
-            raise ValueError("Phone number must be 10 digits.")
-
-        return phone_number
-
+    
     def __str__(self):
         return f"{self.phone_number}: {self.balance:.2f} {self.currency}"
 
@@ -55,14 +38,60 @@ class CompanyWallet(models.Model):
     
     def __str__(self):
         return str(self.wallet)
+def generate_wallet_address(phone_number):
+    """
+    Generates a unique wallet address based on a phone number and a random UUID.
+
+    :param phone_number: The phone number to generate the wallet address from.
+    :type phone_number: str
+    :return: The generated wallet address.
+    :rtype: str
+    """
+    # Remove the first zero if it exists
+    phone_number = phone_number.lstrip('0')
+
+    # Ensure the phone number is 10 digits
+    if len(phone_number) != 10:
+        raise ValueError("Phone number must be 10 digits.")
+
+    # Generate a random UUID
+    uuid_part = uuid.uuid4().hex[:4]
+
+    # Combine phone number and UUID
+    wallet_address = f"{phone_number}{uuid_part}"
+
+    return wallet_address
+
+
+import uuid
 
 class WalletAddress(models.Model):
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
-    address = models.CharField(max_length=10, unique=True)
+    address = models.CharField(max_length=10, unique=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        if not self.address:
+            self.address = self.generate_wallet_address()
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def generate_wallet_address(cls):
+        """
+        Generates a unique wallet address based on a random UUID.
+
+        :return: The generated wallet address.
+        :rtype: str
+        """
+        # Generate a random UUID
+        uuid_part = uuid.uuid4().hex[:8]
+
+        # Create a unique wallet address
+        wallet_address = f"{uuid_part}"
+
+        return wallet_address
 class Transaction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     transaction_type = models.CharField(
