@@ -17,7 +17,31 @@ class CompanyViewSet(viewsets.ModelViewSet):
 class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        # Get query parameters
+        location = request.query_params.get('location', None)
+        skill_name = request.query_params.get('skill', None)
+        
+        # Listing all the jobs on the site
+        
+        jobs = Job.objects.all()
+        
+        # List Jobs by location
+        
+        if location:
+            jobs = jobs.filter(location__icontains=location)
+            
+        # Filter by Skill 
+        
+        if skill_name:
+            jobs = jobs.filter(jobskill__skill__name__icontains=skill_name)
+        
+        # serializer and return the filtered jobs
+        
+        serializer = JobSerializer(jobs, many=True)
+        return Response(serializer.data)
 class JobSkillViewSet(viewsets.ModelViewSet):
     queryset = JobSkill.objects.all()
     serializer_class = JobSkillSerializer
@@ -52,6 +76,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def get_current_user(self, request):
+        
         serializer = CustomUserSerializer(request.user)
         return Response(serializer.data)
 

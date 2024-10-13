@@ -38,36 +38,11 @@ class CompanyWallet(models.Model):
     
     def __str__(self):
         return str(self.wallet)
-def generate_wallet_address(phone_number):
-    """
-    Generates a unique wallet address based on a phone number and a random UUID.
 
-    :param phone_number: The phone number to generate the wallet address from.
-    :type phone_number: str
-    :return: The generated wallet address.
-    :rtype: str
-    """
-    # Remove the first zero if it exists
-    phone_number = phone_number.lstrip('0')
-
-    # Ensure the phone number is 10 digits
-    if len(phone_number) != 10:
-        raise ValueError("Phone number must be 10 digits.")
-
-    # Generate a random UUID
-    uuid_part = uuid.uuid4().hex[:4]
-
-    # Combine phone number and UUID
-    wallet_address = f"{phone_number}{uuid_part}"
-
-    return wallet_address
-
-
-import uuid
 
 class WalletAddress(models.Model):
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
-    address = models.CharField(max_length=10, unique=True, null=True, blank=True)
+    wallet = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    address = models.CharField(max_length=15, unique=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -77,21 +52,22 @@ class WalletAddress(models.Model):
             self.address = self.generate_wallet_address()
         super().save(*args, **kwargs)
 
-    @classmethod
-    def generate_wallet_address(cls):
+    def generate_wallet_address(self):
         """
-        Generates a unique wallet address based on a random UUID.
+        Generates a unique wallet address based on the phone number and a random UUID.
+
 
         :return: The generated wallet address.
         :rtype: str
         """
         # Generate a random UUID
-        uuid_part = uuid.uuid4().hex[:8]
+        uuid_part = uuid.uuid4().hex[:2]
 
         # Create a unique wallet address
-        wallet_address = f"{uuid_part}"
+        wallet_address = f"{self.wallet.phone_number}-{uuid_part}"
 
         return wallet_address
+
 class Transaction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     transaction_type = models.CharField(
