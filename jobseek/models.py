@@ -74,6 +74,7 @@ class JobSkill(models.Model):
 # Application model
 class Application(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
     applicant_name = models.CharField(max_length=100)
     applicant_email = models.EmailField()
     resume = models.FileField(upload_to='applications/')

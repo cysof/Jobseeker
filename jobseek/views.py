@@ -10,6 +10,8 @@ from .models import Company, Job, JobSkill, Skill, Application, CustomUser
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+
+
 class CompanyViewSet(viewsets.ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer

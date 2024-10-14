@@ -7,3 +7,4 @@ pillow==10.4.0
 PyJWT==2.9.0
 setuptools==75.1.0
 sqlparse==0.5.1
+drf-yasg==1.21.7

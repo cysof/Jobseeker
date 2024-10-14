@@ -9,12 +9,12 @@ class CompanySerializer(serializers.ModelSerializer):
 
 # Job serializer
 class JobSerializer(serializers.ModelSerializer):
-    #skills = serializers.StringRelatedField(many=True)
-    company = serializers.StringRelatedField()
-    #job_type = serializers.CharField(source='get_job_type_display')
+    company = serializers.SlugRelatedField(queryset=Company.objects.all(), slug_field='name')
+
     class Meta:
         model = Job
         fields = ['id', 'title', 'description', 'company', 'location', 'job_type', 'experience_level', 'salary', 'is_active']
+
 
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,11 +24,23 @@ class SkillSerializer(serializers.ModelSerializer):
 
 # JobSkill serializer
 class JobSkillSerializer(serializers.ModelSerializer):
-    skill = serializers.StringRelatedField(read_only = False)
-    job = serializers.StringRelatedField()
     class Meta:
         model = JobSkill
-        fields = ['id', 'job', 'skill']
+        fields = ['id', 'job', 'skills']  # Ensure both 'job' and 'skills' are included here.
+
+    def create(self, validated_data):
+        job = validated_data.get('job')  # Ensure job is extracted from validated data.
+        skills = validated_data.get('skills')  # Ensure skills are extracted.
+        
+        if not job:
+            raise serializers.ValidationError({"job": "This field is required."})
+        
+        if not skills:
+            raise serializers.ValidationError({"skills": "This field is required."})
+
+        job_skill = JobSkill.objects.create(job=job, skills=skills)
+        return job_skill
+
         
 
 
@@ -60,19 +72,25 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 # Application serializer
 class ApplicationSerializer(serializers.ModelSerializer):
-    job = serializers.StringRelatedField(read_only=True)
+    job = serializers.StringRelatedField(read_only=True)  # Display string representation of job
+    company = serializers.StringRelatedField(read_only=True)  # Display string representation of company
+    
+    job_id = serializers.PrimaryKeyRelatedField(queryset=Job.objects.all(), write_only=True)  # Accept job_id for creation
+    company_id = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), write_only=True)  # Accept company_id for creation
+
     class Meta:
         model = Application
-        fields = ['id', 'job', 'applicant_name', 'applicant_email', 'resume', 'cover_letter']
-    
-    def create(self, validated_data):
-        applicant_email = self.context['request'].data.get('applicant_email')
-        
-        if not applicant_email:
-            raise serializers.ValidationError("Applicant email is required.")
+        fields = ['id', 'job', 'company', 'job_id', 'company_id', 'applicant_name', 'applicant_email', 'resume', 'cover_letter']
 
-        return Application.objects.create(**validated_data)
-    
+    def create(self, validated_data):
+        # Extract the foreign keys from validated_data
+        job = validated_data.pop('job_id')  # Extract job_id
+        company = validated_data.pop('company_id')  # Extract company_id
+        
+        # Create the application instance with the job and company IDs
+        application = Application.objects.create(job=job, company=company, **validated_data)
+        return application
+
     def update(self, instance, validated_data):
         """
         Updates an application instance. If the 'cover_letter' or 'resume' keys are
