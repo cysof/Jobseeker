@@ -1,9 +1,9 @@
 import dj_database_url
 from decouple import config
 import os
-import sys
 from pathlib import Path
 from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,10 +16,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['jobseeker-ewuk.onrender.com']
-
 
 # Application definition
 
@@ -78,18 +77,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'baseconfig.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
-
-DATABASES['default'] = dj_database_url.parse(config('DATABASE_URL'), conn_max_age=600)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -122,7 +119,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -147,12 +143,9 @@ REST_FRAMEWORK = {
     ],
 }
 
-
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Token lifetime for access tokens
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Token lifetime for refresh tokens
     'ROTATE_REFRESH_TOKENS': True,                 # Rotate refresh tokens on each use
     'BLACKLIST_AFTER_ROTATION': True,              # Blacklist old refresh tokens after rotation
 }
-

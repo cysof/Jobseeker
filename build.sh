@@ -10,7 +10,9 @@ python manage.py collectstatic --no-input
 
 
 # Apply any outstanding database migrations
+python manage.py makemigrations --database=default
 python manage.py migrate
+
 
 
 # Create superuser
