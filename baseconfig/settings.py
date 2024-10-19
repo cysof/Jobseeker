@@ -1,12 +1,20 @@
 import dj_database_url
 from decouple import config
+import environ
 import os
 from pathlib import Path
 from datetime import timedelta
 
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -15,11 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 
+# SECRET_KEY = env('SECRET_KEY')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
+# DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['jobseeker-ewuk.onrender.com', 'localhost', '127.0.0.1']
-
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
 # Application definition
 
 INSTALLED_APPS = [
@@ -80,20 +90,15 @@ WSGI_APPLICATION = 'baseconfig.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
 DATABASES = {
-     'default': dj_database_url.config(
-         default= config ('DATABASE_URL')
-     )
- }
+    'default' : {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
+DATABASES['default'] = dj_database_url.parse(config('DATABASE_URL'), conn_max_age=600)
 
-# DATABASES = {
-  #  'default': {
-   #     'ENGINE': 'django.db.backends.sqlite3',
-    #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-   # }
-# }
 
 
 # Password validation
